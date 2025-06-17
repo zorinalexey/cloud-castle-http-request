@@ -109,7 +109,7 @@ $userId = $request->session->get('user_id');
 $userName = $request->session->get('user_name', 'Guest');
 
 // Удаление значения
-$request->session->delete('user_id');
+$request->session->remove('user_id');
 
 // Очистка всей сессии
 $request->session->clear();
