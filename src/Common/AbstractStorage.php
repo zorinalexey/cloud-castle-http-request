@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace CloudCastle\HttpRequest\Common;
 
+use CloudCastle\HttpRequest\Exceptions\StorageException;
 use CloudCastle\HttpRequest\Interfaces\StorageInterface;
 
 /**
@@ -104,31 +105,32 @@ abstract class AbstractStorage extends AbstractSingleton implements StorageInter
     
     /**
      * Очистить все данные из хранилища
-     * 
+     *
      * Этот метод удаляет все сохраненные пары ключ-значение из текущего экземпляра
      * хранилища. Он перебирает все свойства объекта и вызывает метод remove()
      * для каждого ключа, который существует в хранилище.
      *
      * @return StorageInterface Возвращает текущий экземпляр для цепочки методов
-     * 
+     *
+     * @throws StorageException
+     * @see StorageInterface::remove()
      * @example
      * ```php
      * $storage = Session::getInstance();
      * $storage->set('user_id', 123);
      * $storage->set('preferences', ['theme' => 'dark']);
-     * 
+     *
      * // Очистить все сохраненные данные
      * $storage->clear(); // Удаляет и 'user_id', и 'preferences'
      * ```
-     * 
+     *
      * @note Этот метод помечен как final для предотвращения переопределения,
      *       обеспечивая согласованное поведение во всех реализациях хранилищ.
      *
-     * @see StorageInterface::remove()
      */
     final public function clear (): StorageInterface
     {
-        foreach (array_keys((array) $this) as $key) {
+        foreach((array)$this as $key => $value){
             $this->remove($key);
         }
         
@@ -211,9 +213,8 @@ abstract class AbstractStorage extends AbstractSingleton implements StorageInter
      * сохраненное значение десериализуется и возвращается. Если ключ не существует,
      * возвращается предоставленное значение по умолчанию.
      * 
-     * Метод автоматически обрабатывает сериализацию/десериализацию сохраненных
-     * значений, поэтому вы можете сохранять сложные типы данных, такие как
-     * массивы и объекты.
+     * Метод автоматически десериализует сохраненные значения.
+     * Для получения сырых сериализованных значений используйте getRaw().
      *
      * @param string $key Ключ для получения из хранилища
      * @param mixed $default Значение по умолчанию для возврата, если ключ не существует
@@ -228,33 +229,126 @@ abstract class AbstractStorage extends AbstractSingleton implements StorageInter
      * $storage->set('user_id', 123);
      * $storage->set('preferences', ['theme' => 'dark']);
      * 
-     * // Получить с значениями по умолчанию
+     * // Получить десериализованные значения
      * $userId = $storage->get('user_id', 0); // Возвращает 123
      * $prefs = $storage->get('preferences', []); // Возвращает ['theme' => 'dark']
      * $nonExistent = $storage->get('missing_key', 'default'); // Возвращает 'default'
      * 
-     * // Сложные типы данных автоматически десериализуются
-     * $user = $storage->get('user_object', null); // Возвращает объект User или null
+     * // Для получения сырых сериализованных значений используйте getRaw()
+     * $userIdRaw = $storage->getRaw('user_id'); // Возвращает 's:3:"123";'
      * ```
      * 
-     * @note Этот метод использует функцию PHP unserialize(), которая может быть
-     *       риском безопасности, если сохраненные данные поступают из ненадежных
-     *       источников. Всегда проверяйте и очищайте данные перед сохранением.
-     * 
+     * @see AbstractStorage::getRaw()
      * @see AbstractStorage::has()
      * @see AbstractStorage::set()
-     * 
-     * @security Примечание: Использование unserialize() с ненадежными данными может
-     *           привести к уязвимостям PHP Object Injection. Убедитесь, что
-     *           сохраненные данные поступают из надежных источников или реализуйте
-     *           дополнительную валидацию.
      */
     public function get (string $key, mixed $default = null): mixed
     {
         if ($this->has($key)) {
-            return unserialize($this->{$key});
+            $value = $this->{$key};
+            if ($value !== null && is_string($value)) {
+                return unserialize($value);
+            }
+            return $value;
         }
         
         return $default;
+    }
+    
+    /**
+     * Получить сырое сериализованное значение из хранилища
+     * 
+     * Этот метод извлекает значение из хранилища по его ключу без десериализации.
+     * Если ключ существует, возвращается сериализованное значение как есть.
+     * Если ключ не существует, возвращается предоставленное значение по умолчанию.
+     *
+     * @param string $key Ключ для получения из хранилища
+     * @param mixed $default Значение по умолчанию для возврата, если ключ не существует
+     *
+     * @return mixed Сохраненное значение (сериализованное) или значение по умолчанию
+     * 
+     * @example
+     * ```php
+     * $storage = Session::getInstance();
+     * 
+     * // Сохранить некоторые данные
+     * $storage->set('user_id', 123);
+     * $storage->set('preferences', ['theme' => 'dark']);
+     * 
+     * // Получить сырые сериализованные значения
+     * $userIdRaw = $storage->getRaw('user_id'); // Возвращает 's:3:"123";'
+     * $prefsRaw = $storage->getRaw('preferences'); // Возвращает 'a:1:{s:5:"theme";s:4:"dark";}'
+     * $nonExistent = $storage->getRaw('missing_key', 'default'); // Возвращает 'default'
+     * ```
+     * 
+     * @see AbstractStorage::get()
+     * @see AbstractStorage::has()
+     * @see AbstractStorage::set()
+     */
+    public function getRaw (string $key, mixed $default = null): mixed
+    {
+        if ($this->has($key)) {
+            return $this->{$key};
+        }
+        
+        return $default;
+    }
+
+    /**
+     * Получить все данные из хранилища в виде массива
+     * 
+     * Этот метод возвращает все сохраненные данные из хранилища в виде
+     * ассоциативного массива. Все значения автоматически десериализуются
+     * перед возвратом, аналогично методу get().
+     *
+     * @return array<string, mixed> Ассоциативный массив всех данных (десериализованных)
+     * 
+     * @example
+     * ```php
+     * $storage = Session::getInstance();
+     * $storage->set('user_id', 123);
+     * $storage->set('preferences', ['theme' => 'dark']);
+     * $storage->set('name', 'John');
+     * 
+     * // Получение всех данных
+     * $allData = $storage->all();
+     * 
+     * // Результат:
+     * // [
+     * //     'user_id' => 123,
+     * //     'preferences' => ['theme' => 'dark'],
+     * //     'name' => 'John'
+     * // ]
+     * 
+     * // Использование в циклах
+     * foreach ($storage->all() as $key => $value) {
+     *     echo "{$key}: " . (is_array($value) ? json_encode($value) : $value) . "\n";
+     * }
+     * ```
+     * 
+     * @see AbstractStorage::get()
+     * @see AbstractStorage::getRaw()
+     */
+    public function all(): array
+    {
+        $result = [];
+        $reflection = new \ReflectionObject($this);
+        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED);
+        
+        foreach ($properties as $property) {
+            $property->setAccessible(true);
+            $key = $property->getName();
+            // Пропускаем системные свойства
+            if (in_array($key, ['expire', 'lazy'])) {
+                continue;
+            }
+            $value = $property->isInitialized($this) ? $property->getValue($this) : null;
+            if ($value !== null && is_string($value)) {
+                $result[$key] = unserialize($value);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
     }
 }

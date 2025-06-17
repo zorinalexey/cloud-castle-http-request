@@ -69,8 +69,9 @@ final class Session extends AbstractStorage
     protected static function checkRun(): array
     {
         if (session_status() === PHP_SESSION_NONE) {
-            ini_set('session.gc_maxlifetime', (string) self::$expire[static::class]);
-            ini_set('session.cookie_lifetime', (string) self::$expire[static::class]);
+            $expireTime = self::$expire[static::class] ?? 3600;
+            ini_set('session.gc_maxlifetime', (string) $expireTime);
+            ini_set('session.cookie_lifetime', (string) $expireTime);
             session_start();
         }
         
@@ -127,11 +128,11 @@ final class Session extends AbstractStorage
     public function set(string $key, mixed $value): StorageInterface
     {
         try {
-            $this->{$key} = $_SESSION[$key] = serialize($value);
+            $this->{$key} = $value;
+            $_SESSION[$key] = serialize($value);
         } catch (Throwable $e) {
             throw new StorageException($e->getMessage(), $e->getCode(), null);
         }
-        
         return $this;
     }
     
@@ -196,8 +197,41 @@ final class Session extends AbstractStorage
      */
     public function remove(string $key): StorageInterface
     {
-        unset($this->{$key}, $_SESSION[$key]);
+        if(property_exists($this, $key) && array_key_exists($key, $_SESSION)) {
+            unset($_SESSION[$key], $this->{$key});
+        }
         
         return $this;
+    }
+
+    private function deserializeValue(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            $unserialized = @unserialize($value);
+            if ($unserialized !== false || $value === 'b:0;') {
+                return $unserialized;
+            }
+        }
+        return $value;
+    }
+
+    public function get(string $key, mixed $default = null): mixed
+    {
+        if (!isset($this->{$key})) {
+            return $default;
+        }
+        return $this->deserializeValue($this->{$key});
+    }
+
+    public function all(): array
+    {
+        $result = [];
+        foreach ((array)$this as $key => $value) {
+            if ($key === 'instance' || $key === 'expire' || $key === 'lazy') {
+                continue;
+            }
+            $result[$key] = $this->deserializeValue($value);
+        }
+        return $result;
     }
 }

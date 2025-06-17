@@ -28,11 +28,11 @@
         "ext-json": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^10.0"
+        "phpunit/phpunit": "^10.5"
     },
     "scripts": {
         "documentation-generate": "php ./tools/phpDocumentor.phar run",
-        "unit-test": "phpunit",
+        "unit-test": "phpunit --testdox",
         "phpstan-analyse": "php ./tools/phpstan.phar analyse"
     },
     "config": {

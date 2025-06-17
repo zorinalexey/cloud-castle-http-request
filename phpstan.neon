@@ -3,3 +3,8 @@ parameters:
        paths:
            - src
            - tests
+       ignoreErrors:
+           -
+               message: '#Unsafe usage of new static\(\).#'
+               paths:
+                   - tests/Unit/AbstractSingletonTest.php

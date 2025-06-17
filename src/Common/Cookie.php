@@ -110,9 +110,19 @@ final class Cookie extends AbstractStorage
         }
         
         try {
-            $this->{$key} = $_COOKIE[$key] = serialize($value);
+            $this->{$key} = $value;
+            $_COOKIE[$key] = serialize($value);
             $expireTime = self::$expire[static::class] ?? 3600;
-            setcookie($key, $this->{$key}, time() + $expireTime, '/', $_SERVER['HTTP_HOST'] ?? 'cli', $this->checkHttps(), true);
+            // Корректно сериализуем для setcookie
+            $cookieValue = $value;
+            if (is_array($value) || is_object($value)) {
+                $cookieValue = serialize($value);
+            } elseif (is_null($value)) {
+                $cookieValue = '';
+            } elseif (!is_string($value)) {
+                $cookieValue = (string)$value;
+            }
+            setcookie($key, $cookieValue, time() + $expireTime, '/', $_SERVER['HTTP_HOST'] ?? 'cli', $this->checkHttps(), true);
         } catch (Throwable $e) {
             throw new StorageException($e->getMessage(), $e->getCode(), null);
         }
@@ -132,7 +142,7 @@ final class Cookie extends AbstractStorage
      */
     private function checkHttps (): bool
     {
-        if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (int) $_SERVER['SERVER_PORT'] === 443) {
+        if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)) {
             return true;
         }
         
@@ -184,5 +194,44 @@ final class Cookie extends AbstractStorage
         setcookie($key, '', time() - 3600);
         
         return $this;
+    }
+
+    private function deserializeValue(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            $unserialized = @unserialize($value);
+            if ($unserialized !== false || $value === 'b:0;') {
+                return $unserialized;
+            }
+        }
+        return $value;
+    }
+
+    public function get(string $key, mixed $default = null): mixed
+    {
+        if (!isset($this->{$key})) {
+            return $default;
+        }
+        return $this->deserializeValue($this->{$key});
+    }
+
+    public function all(): array
+    {
+        $result = [];
+        $reflection = new \ReflectionObject($this);
+        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED);
+        foreach ($properties as $property) {
+            $property->setAccessible(true);
+            $key = $property->getName();
+            
+            // Пропускаем системные и статические свойства
+            if (in_array($key, ['expire', 'lazy', 'instance']) || $property->isStatic()) {
+                continue;
+            }
+            
+            $value = $property->isInitialized($this) ? $property->getValue($this) : null;
+            $result[$key] = $this->deserializeValue($value);
+        }
+        return $result;
     }
 }

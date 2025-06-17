@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace CloudCastle\HttpRequest\Common;
 
 use Exception;
@@ -100,7 +102,8 @@ final class UploadFile extends stdClass
      * 
      * @see Files::setFile()
      */
-    public function __construct(array $file){
+    public function __construct(array $file)
+    {
         foreach ($file as $key => $value) {
             $this->{$key} = $value;
         }
@@ -190,27 +193,344 @@ final class UploadFile extends stdClass
     /**
      * Получить расширение файла на основе MIME-типа
      * 
-     * Определяет расширение файла по его MIME-типу. Поддерживает наиболее
-     * распространенные типы файлов: изображения, документы, архивы и другие.
-     * 
+     * Этот метод определяет расширение файла на основе его MIME-типа,
+     * используя предопределенную карту соответствий MIME-типов и расширений.
+     * Если MIME-тип не найден в карте, возвращает null.
+     *
      * @param string $mimeType MIME-тип файла
-     * 
-     * @return string|null Расширение файла без точки или null, если тип не поддерживается
+     *
+     * @return string|null Расширение файла или null, если MIME-тип не найден
      * 
      * @example
      * ```php
-     * $extension = $this->getExtensionFromMimeType('image/jpeg'); // 'jpg'
-     * $extension = $this->getExtensionFromMimeType('application/pdf'); // 'pdf'
-     * $extension = $this->getExtensionFromMimeType('text/plain'); // 'txt'
+     * $file = new UploadFile($_FILES['document']);
+     * 
+     * $mimeType = $file->getMimeType();
+     * $extension = $file->getExtensionFromMimeType($mimeType);
+     * 
+     * if ($extension) {
+     *     echo "Расширение файла: .$extension";
+     * } else {
+     *     echo "Неизвестный MIME-тип: $mimeType";
+     * }
+     * 
+     * // Примеры соответствий:
+     * // 'image/jpeg' -> 'jpg'
+     * // 'application/pdf' -> 'pdf'
+     * // 'text/plain' -> 'txt'
      * ```
      * 
-     * @note Метод поддерживает ограниченный набор MIME-типов. Для расширенной
-     *       поддержки можно использовать внешние библиотеки или базы данных.
+     * @see UploadFile::getMimeType()
+     * @see UploadFile::getExtension()
      */
     private function getExtensionFromMimeType(string $mimeType): ?string
     {
-        $mimeToExtension = require '../inc/mime_types.php';
+        $mimeToExtension = require __DIR__ . '/../inc/mime_types.php';
         
         return $mimeToExtension[$mimeType] ?? null;
+    }
+    
+    /**
+     * Проверить, был ли файл загружен через HTTP POST
+     * 
+     * Этот метод проверяет, что файл действительно был загружен через
+     * HTTP POST запрос, а не создан локально на сервере. Это важная
+     * проверка безопасности для предотвращения атак через загрузку файлов.
+     * 
+     * @return bool true, если файл был загружен через HTTP POST, false в противном случае
+     * 
+     * @example
+     * ```php
+     * $file = new UploadFile($_FILES['document']);
+     * 
+     * if ($file->isUploaded()) {
+     *     // Файл безопасно загружен через HTTP
+     *     $result = $file->save('/uploads/');
+     * } else {
+     *     // Файл не был загружен через HTTP - потенциальная угроза безопасности
+     *     echo "Ошибка: файл не был загружен через HTTP";
+     * }
+     * 
+     * // Проверка перед сохранением
+     * if ($file->isUploaded() && $file->getError() === UPLOAD_ERR_OK) {
+     *     $file->save('/uploads/');
+     * }
+     * ```
+     * 
+     * @note Этот метод использует PHP функцию is_uploaded_file() для проверки.
+     *       Всегда проверяйте результат этого метода перед сохранением файла.
+     * 
+     * @see is_uploaded_file()
+     * @see UploadFile::save()
+     * @see UploadFile::getError()
+     */
+    public function isUploaded(): bool
+    {
+        return is_uploaded_file($this->tmp_name);
+    }
+    
+    /**
+     * Получить оригинальное имя файла
+     * 
+     * Возвращает оригинальное имя файла, которое было на компьютере
+     * пользователя до загрузки. Это имя может содержать путь и
+     * специальные символы, поэтому его следует использовать с осторожностью.
+     * 
+     * @return string Оригинальное имя файла
+     * 
+     * @example
+     * ```php
+     * $file = new UploadFile($_FILES['document']);
+     * 
+     * $originalName = $file->getOriginalName();
+     * echo "Загружен файл: $originalName";
+     * 
+     * // Примеры имен файлов:
+     * // "photo.jpg"
+     * // "My Document.pdf"
+     * // "C:\Users\John\Desktop\image.png" (Windows)
+     * // "/home/user/documents/file.txt" (Unix)
+     * 
+     * // Безопасное использование имени файла
+     * $safeName = basename($file->getOriginalName());
+     * $extension = pathinfo($safeName, PATHINFO_EXTENSION);
+     * ```
+     * 
+     * @note Оригинальное имя может содержать путь к файлу и специальные
+     *       символы. Для безопасного использования рекомендуется применять
+     *       basename() и pathinfo() для извлечения только имени файла.
+     * 
+     * @see basename()
+     * @see pathinfo()
+     * @see UploadFile::save()
+     */
+    public function getOriginalName(): string
+    {
+        return $this->name;
+    }
+    
+    /**
+     * Получить размер файла в байтах
+     * 
+     * Возвращает размер загруженного файла в байтах. Это значение
+     * предоставляется браузером и может быть использовано для проверки
+     * ограничений размера файла.
+     * 
+     * @return int Размер файла в байтах
+     * 
+     * @example
+     * ```php
+     * $file = new UploadFile($_FILES['document']);
+     * 
+     * $size = $file->getSize();
+     * echo "Размер файла: $size байт";
+     * 
+     * // Проверка ограничений размера
+     * $maxSize = 5 * 1024 * 1024; // 5MB
+     * if ($file->getSize() > $maxSize) {
+     *     echo "Файл слишком большой";
+     * }
+     * 
+     * // Форматирование размера для отображения
+     * function formatFileSize(int $bytes): string {
+     *     $units = ['B', 'KB', 'MB', 'GB'];
+     *     $bytes = max($bytes, 0);
+     *     $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+     *     $pow = min($pow, count($units) - 1);
+     *     $bytes /= pow(1024, $pow);
+     *     return round($bytes, 2) . ' ' . $units[$pow];
+     * }
+     * 
+     * echo "Размер: " . formatFileSize($file->getSize());
+     * ```
+     * 
+     * @note Размер файла предоставляется браузером и может быть неточным
+     *       в некоторых случаях. Для точной проверки рекомендуется
+     *       использовать filesize() после сохранения файла.
+     * 
+     * @see filesize()
+     * @see UploadFile::save()
+     */
+    public function getSize(): int
+    {
+        return $this->size;
+    }
+    
+    /**
+     * Получить код ошибки загрузки файла
+     * 
+     * Возвращает код ошибки, который указывает на результат попытки
+     * загрузки файла. Код 0 означает успешную загрузку, другие коды
+     * указывают на различные типы ошибок.
+     * 
+     * @return int Код ошибки загрузки
+     * 
+     * @example
+     * ```php
+     * $file = new UploadFile($_FILES['document']);
+     * 
+     * switch ($file->getError()) {
+     *     case UPLOAD_ERR_OK:
+     *         echo "Файл загружен успешно";
+     *         break;
+     *         
+     *     case UPLOAD_ERR_INI_SIZE:
+     *         echo "Файл превышает максимальный размер, указанный в php.ini";
+     *         break;
+     *         
+     *     case UPLOAD_ERR_FORM_SIZE:
+     *         echo "Файл превышает максимальный размер, указанный в форме";
+     *         break;
+     *         
+     *     case UPLOAD_ERR_PARTIAL:
+     *         echo "Файл был загружен только частично";
+     *         break;
+     *         
+     *     case UPLOAD_ERR_NO_FILE:
+     *         echo "Файл не был загружен";
+     *         break;
+     *         
+     *     case UPLOAD_ERR_NO_TMP_DIR:
+     *         echo "Отсутствует временная папка";
+     *         break;
+     *         
+     *     case UPLOAD_ERR_CANT_WRITE:
+     *         echo "Не удалось записать файл на диск";
+     *         break;
+     *         
+     *     case UPLOAD_ERR_EXTENSION:
+     *         echo "Загрузка файла была остановлена расширением PHP";
+     *         break;
+     *         
+     *     default:
+     *         echo "Неизвестная ошибка загрузки";
+     * }
+     * 
+     * // Простая проверка успешности загрузки
+     * if ($file->getError() === UPLOAD_ERR_OK) {
+     *     $file->save('/uploads/');
+     * }
+     * ```
+     * 
+     * @note Всегда проверяйте код ошибки перед обработкой файла.
+     *       Даже если файл присутствует в $_FILES, он может содержать ошибки.
+     * 
+     * @see UPLOAD_ERR_OK
+     * @see UPLOAD_ERR_INI_SIZE
+     * @see UPLOAD_ERR_FORM_SIZE
+     * @see UPLOAD_ERR_PARTIAL
+     * @see UPLOAD_ERR_NO_FILE
+     * @see UPLOAD_ERR_NO_TMP_DIR
+     * @see UPLOAD_ERR_CANT_WRITE
+     * @see UPLOAD_ERR_EXTENSION
+     * @see UploadFile::isUploaded()
+     */
+    public function getError(): int
+    {
+        return $this->error;
+    }
+    
+    /**
+     * Получить MIME-тип файла
+     * 
+     * Возвращает MIME-тип файла, предоставленный браузером. MIME-тип
+     * указывает на тип содержимого файла и может быть использован для
+     * валидации и определения расширения файла.
+     * 
+     * @return string MIME-тип файла
+     * 
+     * @example
+     * ```php
+     * $file = new UploadFile($_FILES['document']);
+     * 
+     * $mimeType = $file->getMimeType();
+     * echo "Тип файла: $mimeType";
+     * 
+     * // Проверка допустимых типов файлов
+     * $allowedTypes = [
+     *     'image/jpeg',
+     *     'image/png',
+     *     'image/gif',
+     *     'application/pdf',
+     *     'text/plain'
+     * ];
+     * 
+     * if (in_array($file->getMimeType(), $allowedTypes)) {
+     *     echo "Тип файла разрешен";
+     *     $file->save('/uploads/');
+     * } else {
+     *     echo "Недопустимый тип файла";
+     * }
+     * 
+     * // Определение категории файла
+     * $mimeType = $file->getMimeType();
+     * if (str_starts_with($mimeType, 'image/')) {
+     *     echo "Это изображение";
+     * } elseif (str_starts_with($mimeType, 'video/')) {
+     *     echo "Это видео";
+     * } elseif (str_starts_with($mimeType, 'audio/')) {
+     *     echo "Это аудио";
+     * }
+     * ```
+     * 
+     * @note MIME-тип предоставляется браузером и может быть подделан.
+     *       Для надежной валидации рекомендуется дополнительно проверять
+     *       содержимое файла или использовать функции типа finfo_file().
+     * 
+     * @see finfo_file()
+     * @see UploadFile::getExtension()
+     * @see UploadFile::save()
+     */
+    public function getMimeType(): string
+    {
+        return $this->type;
+    }
+    
+    /**
+     * Получить расширение файла на основе MIME-типа
+     * 
+     * Определяет расширение файла по его MIME-типу и возвращает его
+     * без точки. Если MIME-тип не поддерживается, возвращает пустую строку.
+     * 
+     * @return string Расширение файла без точки или пустая строка, если тип не поддерживается
+     * 
+     * @example
+     * ```php
+     * $file = new UploadFile($_FILES['document']);
+     * 
+     * $extension = $file->getExtension();
+     * echo "Расширение файла: $extension";
+     * 
+     * // Примеры возвращаемых значений:
+     * // $file->getMimeType() = 'image/jpeg' → $file->getExtension() = 'jpg'
+     * // $file->getMimeType() = 'application/pdf' → $file->getExtension() = 'pdf'
+     * // $file->getMimeType() = 'text/plain' → $file->getExtension() = 'txt'
+     * // $file->getMimeType() = 'unknown/type' → $file->getExtension() = ''
+     * 
+     * // Использование для создания безопасного имени файла
+     * $originalName = $file->getOriginalName();
+     * $extension = $file->getExtension();
+     * 
+     * if ($extension) {
+     *     $safeName = uniqid() . '.' . $extension;
+     * } else {
+     *     // Если расширение не определено, используем оригинальное
+     *     $safeName = uniqid() . '_' . basename($originalName);
+     * }
+     * 
+     * $file->save('/uploads/', $safeName);
+     * ```
+     * 
+     * @note Метод использует внутренний список MIME-типов для определения
+     *       расширения. Если MIME-тип не найден в списке, возвращается
+     *       пустая строка.
+     * 
+     * @see UploadFile::getMimeType()
+     * @see UploadFile::getExtensionFromMimeType()
+     * @see UploadFile::save()
+     */
+    public function getExtension(): string
+    {
+        return $this->getExtensionFromMimeType($this->type) ?? '';
     }
 }
