@@ -1,0 +1,42 @@
+{
+    "name": "cloud-castle/http-request",
+    "description": "Библиотека обработки HTTP запросов",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "CloudCastle\\HttpRequest\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "CloudCastle\\HttpRequest\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Алексей Зорин",
+            "email": "zorinalexey59292@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "ext-xml": "*",
+        "ext-simplexml": "*",
+        "ext-session": "*",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "scripts": {
+        "documentation-generate": "php ./tools/phpDocumentor.phar run",
+        "unit-test": "phpunit",
+        "phpstan-analyse": "php ./tools/phpstan.phar analyse"
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    }
+}
