@@ -58,7 +58,7 @@ composer require cloud-castle/http-request:^1.0
 
 ```bash
 # Клонирование репозитория
-git clone https://github.com/cloud-castle/http-request.git
+git clone https://github.com/zorinalexey/cloud-castle-http-request
 
 # Переход в директорию
 cd http-request

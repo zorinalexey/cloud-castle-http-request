@@ -4,7 +4,7 @@
 
 1. Клонируйте репозиторий:
 ```bash
-git clone https://github.com/your-username/http-request.git
+git clone https://github.com/zorinalexey/cloud-castle-http-request
 cd http-request
 ```
 
