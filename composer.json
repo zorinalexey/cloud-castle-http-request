@@ -7,7 +7,14 @@
     "autoload": {
         "psr-4": {
             "CloudCastle\\HttpRequest\\": "src/"
-        }
+        },
+        "files": [
+            "src/helpers/cookies.php",
+            "src/helpers/files.php",
+            "src/helpers/headers.php",
+            "src/helpers/request.php",
+            "src/helpers/session.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
