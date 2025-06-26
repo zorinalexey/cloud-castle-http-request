@@ -2,7 +2,13 @@
 
 use CloudCastle\HttpRequest\Http\Session;
 
-function session(): Session
+function session(string|null $key = null, mixed $default = null): mixed
 {
-    return Session::getInstance();
+    $session = Session::getInstance();
+    
+    if($key){
+        return $session->get($key, $default);
+    }
+    
+    return $session;
 }

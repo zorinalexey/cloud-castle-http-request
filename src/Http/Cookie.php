@@ -14,4 +14,9 @@ final class Cookie
     {
     
     }
+    
+    public function get(string $key, mixed $default = null): mixed
+    {
+        return isset($_COOKIE[$key]) ? $_COOKIE[$key] : $default;
+    }
 }

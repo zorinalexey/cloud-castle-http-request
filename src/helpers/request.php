@@ -2,7 +2,13 @@
 
 use CloudCastle\HttpRequest\Request;
 
-function request(): Request
+function request(string|null $key = null, mixed $default = null): mixed
 {
-    return Request::getInstance();
+    $request = Request::getInstance();
+    
+    if($key){
+        return $request->get($key, $default);
+    }
+    
+    return $request;
 }

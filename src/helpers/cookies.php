@@ -2,7 +2,13 @@
 
 use CloudCastle\HttpRequest\Http\Cookie;
 
-function cookies(): Cookie
+function cookies(string|null $key = null, mixed $default = null): mixed
 {
-    return Cookie::getInstance();
+    $cookie = Cookie::getInstance();
+    
+    if($key){
+        return $cookie->get($key, $default);
+    }
+    
+    return $cookie;
 }

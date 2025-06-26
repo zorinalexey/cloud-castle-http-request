@@ -2,7 +2,17 @@
 
 use CloudCastle\HttpRequest\Http\Files;
 
-function files(): Files
+function files(string|null $name): mixed
 {
-    return Files::getInstance();
+    $files = Files::getInstance();
+    
+    if($name){
+        foreach ($files->all() as $key => $value) {
+            if($key === $name){
+                return $value;
+            }
+        }
+    }
+    
+    return $files;
 }

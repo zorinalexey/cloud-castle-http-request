@@ -13,7 +13,7 @@ trait GetDataTrait
         return $this->get($name);
     }
     
-    private function get (string $name, mixed $default = null): mixed
+    public function get (string $name, mixed $default = null): mixed
     {
         $key = mb_strtolower($name);
         
