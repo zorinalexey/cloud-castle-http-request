@@ -10,8 +10,11 @@
         },
         "files": [
             "src/helpers/cookies.php",
+            "src/helpers/env.php",
             "src/helpers/files.php",
+            "src/helpers/get.php",
             "src/helpers/headers.php",
+            "src/helpers/post.php",
             "src/helpers/request.php",
             "src/helpers/session.php"
         ]
