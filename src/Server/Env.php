@@ -8,10 +8,41 @@ use CloudCastle\HttpRequest\Traits\GetDataTrait;
 use CloudCastle\HttpRequest\Traits\GetInstanceTrait;
 use stdClass;
 
+/**
+ * Class Env
+ *
+ * Класс-обёртка для доступа к переменным окружения ($_ENV/getenv) через удобные методы и магические свойства.
+ * Реализует паттерн Singleton и предоставляет методы для получения значений по ключу, всех данных и магический геттер.
+ * Позволяет также устанавливать переменные окружения через магический сеттер.
+ *
+ * Пример использования:
+ * <code>
+ * use CloudCastle\HttpRequest\Server\Env;
+ *
+ * $env = Env::getInstance();
+ * $dbHost = $env->get('DB_HOST');
+ * $appEnv = $env->app_env;
+ * $all = $env->all();
+ *
+ * // Установка переменной окружения
+ * $env->NEW_VAR = 'value';
+ * </code>
+ *
+ * @package CloudCastle\HttpRequest\Server
+ */
 final class Env extends stdClass
 {
     use GetDataTrait, GetInstanceTrait;
     
+    /**
+     * Конструктор Env. Заполняет коллекцию данными из $_ENV или getenv().
+     * Вызывается только внутри класса (Singleton).
+     *
+     * Пример внутреннего использования:
+     * <code>
+     * $env = new self();
+     * </code>
+     */
     private function __construct()
     {
         $env = $_ENV;
@@ -29,6 +60,17 @@ final class Env extends stdClass
         }
     }
     
+    /**
+     * Магический сеттер для установки переменной окружения.
+     *
+     * @param string $name Имя переменной окружения
+     * @param mixed $value Значение переменной
+     *
+     * Пример:
+     * <code>
+     * $env->MY_VAR = 'test';
+     * </code>
+     */
     public function __set(string $name, mixed $value): void
     {
         $_ENV[$name] = $value;
@@ -58,5 +100,6 @@ final class Env extends stdClass
         }
         
         putenv("$name=".escapeshellarg($value));
+        $this->data[mb_strtolower($name)] = $value;
     }
 }
