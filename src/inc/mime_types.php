@@ -189,6 +189,8 @@ return [
      'application/vnd.ms-powerpoint' => 'ppt',
      'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
      'text/plain' => 'txt',
+     'text/csv' => 'csv',
+     'text/tab-separated-values' => 'tsv',
      'text/html' => 'html',
      'text/css' => 'css',
      'text/javascript' => 'js',
@@ -623,4 +625,16 @@ return [
       * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#text_types
       */
      // Текстовые файлы
+     'text/markdown' => 'md',
+     'text/x-c' => 'c',
+     'text/x-c++' => 'cpp',
+     'text/x-java-source' => 'java',
+     'text/x-python' => 'py',
+     'text/x-shellscript' => 'sh',
+     'text/x-perl' => 'pl',
+     'text/x-ruby' => 'rb',
+     'text/x-go' => 'go',
+     'text/x-sql' => 'sql',
+     'text/x-yaml' => 'yaml',
+     'text/x-ini' => 'ini',
 ];

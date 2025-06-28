@@ -36,7 +36,7 @@ final class UploadFile extends stdClass
     /**
      * Конструктор UploadFile. Заполняет объект данными файла.
      *
-     * @param array $file Массив с данными файла (обычно из $_FILES)
+     * @param array<string, mixed> $file Массив с данными файла (обычно из $_FILES)
      *
      * Пример внутреннего использования:
      * <code>
@@ -105,7 +105,7 @@ final class UploadFile extends stdClass
      * $ext = $this->getExtensionFromMimeType('image/jpeg');
      * </code>
      */
-    private function getExtensionFromMimeType(string $mimeType): ?string
+    protected function getExtensionFromMimeType(string $mimeType): ?string
     {
         $mimeToExtension = require __DIR__ . '/../inc/mime_types.php';
         

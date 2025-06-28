@@ -28,7 +28,7 @@ use stdClass;
  */
 final class Post extends stdClass
 {
-    use GetDataTrait, GetInstanceTrait;
+    use GetDataTrait/*<mixed>*/, GetInstanceTrait;
     
     /**
      * Конструктор Post. Заполняет коллекцию данными из $_POST.

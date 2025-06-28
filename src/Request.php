@@ -105,7 +105,7 @@ final class Request extends stdClass implements HttpRequestInterface
      * $request = new self();
      * </code>
      */
-    private function __construct()
+    protected function __construct()
     {
         foreach ($this->getRequestData() as $key => $value) {
             $this->{$key} = $value;
@@ -113,18 +113,9 @@ final class Request extends stdClass implements HttpRequestInterface
     }
     
     /**
-     * Формирует массив данных запроса с учетом типа Content-Type и метода запроса.
-     * Используется внутри конструктора для инициализации свойств объекта.
-     *
-     * Пример внутреннего использования:
-     * <code>
-     * $data = $this->getRequestData();
-     * </code>
-     *
-     * @return array Массив данных запроса
-     * @throws InputException Если Content-Type не поддерживается
+     * @return array<string, mixed>
      */
-    private function getRequestData(): array
+    protected function getRequestData(): array
     {
         $headers = Headers::getInstance();
         $default = [
@@ -152,18 +143,9 @@ final class Request extends stdClass implements HttpRequestInterface
     }
     
     /**
-     * Разбирает тело запроса в зависимости от Content-Type (JSON, XML).
-     * Используется внутри getRequestData().
-     *
-     * Пример внутреннего использования:
-     * <code>
-     * $parsed = $this->getRequest($headers);
-     * </code>
-     *
-     * @param Headers $headers Заголовки запроса
-     * @return array Массив разобранных данных
+     * @return array<string, mixed>
      */
-    private function getRequest(Headers $headers): array
+    protected function getRequest(Headers $headers): array
     {
         $data = [];
         $contentType = ($headers->{'Content-Type'} ?? ($_SERVER['CONTENT_TYPE'] ?? null))?? null;
@@ -226,6 +208,24 @@ final class Request extends stdClass implements HttpRequestInterface
     }
     
     /**
+     * Сбросить экземпляр (внутренний метод для тестирования)
+     */
+    public static function resetInstance(): void
+    {
+        self::$instance = null;
+    }
+    
+    /**
+     * Создать экземпляр для тестирования (внутренний метод)
+     *
+     * @return static Экземпляр Request
+     */
+    public static function createForTesting(): static
+    {
+        return new static();
+    }
+    
+    /**
      * Магический геттер для получения свойств запроса
      *
      * @param string $name Имя свойства
@@ -276,15 +276,7 @@ final class Request extends stdClass implements HttpRequestInterface
     }
     
     /**
-     * Получить все свойства запроса в виде ассоциативного массива
-     *
-     * @return array Ассоциативный массив всех свойств запроса
-     *
-     * Пример:
-     * <code>
-     * $all = $request->all();
-     * print_r($all);
-     * </code>
+     * @return array<string, mixed>
      */
     public function all(): array
     {

@@ -29,7 +29,7 @@ trait GetInstanceTrait
     /**
      * Массив экземпляров классов (по имени класса).
      *
-     * @var array<string, self>
+     * @var array<string, self|null>
      *
      * Пример:
      * <code>
@@ -53,10 +53,19 @@ trait GetInstanceTrait
     {
         $class = static::class;
         
-        if(!self::$instance[$class]) {
+        if (!isset(self::$instance[$class])) {
             self::$instance[$class] = new self();
         }
         
         return self::$instance[$class];
+    }
+    
+    /**
+     * Сбросить экземпляр (внутренний метод для тестирования)
+     */
+    public static function resetInstance(): void
+    {
+        $class = static::class;
+        self::$instance[$class] = null;
     }
 }

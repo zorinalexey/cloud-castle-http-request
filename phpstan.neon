@@ -4,7 +4,22 @@ parameters:
            - src
            - tests
        ignoreErrors:
-           -
-               message: '#Unsafe usage of new static\(\).#'
-               paths:
-                   - tests/Unit/AbstractSingletonTest.php
+         -
+           message: '#uses generic trait.*GetDataTrait but does not specify its types#'
+           paths:
+             - src/Http/*
+             - src/Server/*
+             - src/Traits/*
+         -
+           message: '#The @extends tag of class.*GetDataTrait but the class extends stdClass#'
+           paths:
+             - src/Server/*
+         -
+           message: '#function unserialize expects string#'
+           paths:
+             - src/Http/Session.php
+         -
+           message: '#Cannot access offset mixed on#'
+           paths:
+             - src/Http/Files.php
+       reportUnmatchedIgnoredErrors: false

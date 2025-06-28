@@ -29,13 +29,28 @@ use stdClass;
  * </code>
  *
  * @package CloudCastle\HttpRequest\Server
+ * @extends GetDataTrait<mixed>
  */
 final class Env extends stdClass
 {
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $data = [];
     use GetDataTrait, GetInstanceTrait;
     
     /**
-     * Конструктор Env. Заполняет коллекцию данными из $_ENV или getenv().
+     * Создать экземпляр для тестирования (внутренний метод)
+     *
+     * @return static Экземпляр Env
+     */
+    public static function createForTesting(): static
+    {
+        return new static();
+    }
+    
+    /**
+     * Конструктор Env. Заполняет коллекцию данными из переменных окружения.
      * Вызывается только внутри класса (Singleton).
      *
      * Пример внутреннего использования:
@@ -43,15 +58,9 @@ final class Env extends stdClass
      * $env = new self();
      * </code>
      */
-    private function __construct()
+    protected function __construct()
     {
-        $env = $_ENV;
-        
-        if(!$env){
-            $env = getenv();
-        }
-        
-        foreach ($env as $key => $value) {
+        foreach ($_ENV as $key => $value) {
             if(json_validate($value)){
                 $value = json_decode($value);
             }

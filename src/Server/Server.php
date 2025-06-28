@@ -25,9 +25,14 @@ use stdClass;
  * </code>
  *
  * @package CloudCastle\HttpRequest\Server
+ * @extends GetDataTrait<mixed>
  */
 final class Server extends stdClass
 {
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $data = [];
     use GetDataTrait, GetInstanceTrait;
     
     /**

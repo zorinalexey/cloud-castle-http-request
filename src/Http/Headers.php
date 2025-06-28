@@ -32,7 +32,21 @@ use stdClass;
  */
 final class Headers extends stdClass
 {
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $data = [];
     use GetDataTrait, GetInstanceTrait;
+    
+    /**
+     * Создать экземпляр для тестирования (внутренний метод)
+     *
+     * @return static Экземпляр Headers
+     */
+    public static function createForTesting(): static
+    {
+        return new static();
+    }
     
     /**
      * Конструктор Headers. Заполняет коллекцию данными из HTTP-заголовков.
@@ -43,7 +57,7 @@ final class Headers extends stdClass
      * $headers = new self();
      * </code>
      */
-    private function __construct()
+    protected function __construct()
     {
         $headers = [];
         
@@ -91,6 +105,16 @@ final class Headers extends stdClass
     public function __set(string $key, mixed $value): void
     {
         $this->data[mb_strtolower($key)] = $value;
-        header($key.': '.$value);
+        
+        // Преобразуем значение в строку для header()
+        if (is_object($value) || is_array($value)) {
+            $headerValue = json_encode($value);
+        }elseif(is_bool($value)) {
+            $headerValue = $value ? 'true' : 'false';
+        }else{
+            $headerValue = (string) $value;
+        }
+        
+        header($key.': '.$headerValue);
     }
 }

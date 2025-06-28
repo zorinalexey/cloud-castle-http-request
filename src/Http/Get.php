@@ -28,7 +28,11 @@ use stdClass;
  */
 final class Get extends stdClass
 {
-    use GetDataTrait, GetInstanceTrait;
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $data = [];
+    use GetDataTrait/*<mixed>*/, GetInstanceTrait;
     
     /**
      * Конструктор Get. Заполняет коллекцию данными из $_GET.

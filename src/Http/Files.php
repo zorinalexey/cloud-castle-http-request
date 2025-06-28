@@ -30,6 +30,10 @@ use CloudCastle\HttpRequest\Traits\GetInstanceTrait;
  */
 final class Files
 {
+    /**
+     * @var array<string, UploadFile|array<int, UploadFile>>
+     */
+    protected array $data = [];
     use GetDataTrait, GetInstanceTrait;
     
     /**
@@ -43,20 +47,25 @@ final class Files
      */
     private function __construct()
     {
+        /** @var array<string, UploadFile|array<int, UploadFile>> $files */
         $files = [];
         
-        foreach ($_FILES as $file) {
+        foreach ($_FILES as $fieldName => $file) {
             if(is_array($file['name'])) {
-                foreach ($file as $key => $value) {
+                // Множественные файлы
+                $fileCount = count($file['name']);
+                for ($i = 0; $i < $fileCount; $i++) {
                     $data = [
-                        'name' => $file['name'][$key],
-                        'type' => $file['type'][$key],
-                        'tmp_name' => $file['tmp_name'][$key],
-                        'error' => $file['error'][$key],
+                        'name' => $file['name'][$i],
+                        'type' => $file['type'][$i],
+                        'tmp_name' => $file['tmp_name'][$i],
+                        'error' => $file['error'][$i],
+                        'size' => $file['size'][$i] ?? 0
                     ];
-                    $files[$data['name']][$key] = new UploadFile($data);
+                    $files[$data['name']] = new UploadFile($data);
                 }
-            }else{
+            } else {
+                // Одиночный файл
                 $files[$file['name']] = new UploadFile($file);
             }
         }

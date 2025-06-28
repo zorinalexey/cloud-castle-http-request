@@ -27,17 +27,13 @@ namespace CloudCastle\HttpRequest\Traits;
  * print_r($obj->all()); // ['foo' => 'bar']
  * </code>
  */
+/**
+ * @template TValue
+ */
 trait GetDataTrait
 {
     /**
-     * Коллекция данных, доступных для получения через get/all или магический геттер.
-     *
-     * @var array
-     *
-     * Пример:
-     * <code>
-     * $this->data = ['id' => 123, 'name' => 'Alex'];
-     * </code>
+     * @var array<string, TValue>
      */
     protected array $data = [];
     
@@ -83,12 +79,15 @@ trait GetDataTrait
     /**
      * Получить все данные в виде ассоциативного массива.
      *
-     * @return array Все данные
+     * @return array<string, TValue> Все данные
      *
      * Пример:
      * <code>
      * $all = $obj->all();
      * </code>
+     */
+    /**
+     * @return array<string, TValue>
      */
     public function all(): array
     {

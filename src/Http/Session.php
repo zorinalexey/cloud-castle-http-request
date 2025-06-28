@@ -30,16 +30,23 @@ final class Session
     use SetExpireTrait;
     
     /**
-     * Данные сессии.
-     *
-     * @var array
-     *
-     * Пример:
-     * <code>
-     * $this->data = ['user_id' => 123];
-     * </code>
+     * @var array<string, int|string>
      */
     private array $data = [];
+    /**
+     * @var int|null
+     */
+    private ?int $last_active = null;
+    
+    /**
+     * Создать экземпляр для тестирования (внутренний метод)
+     *
+     * @return static Экземпляр Session
+     */
+    public static function createForTesting(): static
+    {
+        return new static();
+    }
     
     /**
      * Конструктор Session. Инициализирует сессию, загружает данные и управляет временем жизни.
@@ -50,31 +57,35 @@ final class Session
      * $session = new self();
      * </code>
      */
-    private function __construct()
+    protected function __construct()
     {
         $sessionStatus = session_status();
         
         if($sessionStatus !== PHP_SESSION_DISABLED && $sessionStatus !== PHP_SESSION_ACTIVE) {
-            session_start();
             ini_set('session.gc_maxlifetime', self::$expire);
+            session_start();
             
             foreach ($_SESSION as $key => $value){
                 if(is_string($value)){
                     $this->data[$key] = unserialize($value);
+                } else {
+                    $this->data[$key] = $value;
                 }
             }
             
-            $lastActive = $this->{'last_active'};
+            $this->last_active = isset($this->data['last_active']) && is_int($this->data['last_active']) ? $this->data['last_active'] : null;
             
-            if($lastActive !== NULL && time() - $lastActive > self::$expire) {
+            if($this->last_active !== null && (time() - $this->last_active) > self::$expire) {
                 session_unset();
                 session_destroy();
             }else{
-                $this->{'last_active'} = time();
+                $this->last_active = time();
+                $this->data['last_active'] = $this->last_active;
             }
         }
     }
     
+
     /**
      * Получить значение из сессии по ключу.
      *
