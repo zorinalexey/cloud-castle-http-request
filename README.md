@@ -1,9 +1,11 @@
 # CloudCastle HttpRequest
 
+[English](README.en.md) | [Deutsch](README.de.md)
+
 [![Coverage Status](https://img.shields.io/badge/coverage-auto-brightgreen)](coverage-report/index.html)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/zorinalexey/cloud-castle-http-request/actions)
 [![PHPStan](https://img.shields.io/badge/phpstan-passing-brightgreen)](https://phpstan.org/)
-[![License](https://img.shields.io/github/license/zorinalexey/cloud-castle-http-request)](https://github.com/zorinalexey/cloud-castle-http-request/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/zorinalexey/cloud-castle-http-request)](LICENSE)
 [![Packagist Version](https://img.shields.io/packagist/v/cloud-castle/http-request)](https://packagist.org/packages/cloud-castle/http-request)
 ---
 
