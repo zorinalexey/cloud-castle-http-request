@@ -34,7 +34,7 @@ use stdClass;
  * </code>
  *
  * @package CloudCastle\HttpRequest
- * @author  CloudCastle
+ * @author Зорин Алексей <zorinalexey59292@gmail.com>
  * @version 1.0.0
  *
  * @property-read Session $session Экземпляр сессии
@@ -104,6 +104,7 @@ final class Request extends stdClass implements HttpRequestInterface
      * <code>
      * $request = new self();
      * </code>
+     * @throws InputException
      */
     protected function __construct()
     {
@@ -114,14 +115,16 @@ final class Request extends stdClass implements HttpRequestInterface
     
     /**
      * @return array<string, mixed>
+     * @throws InputException
      */
     protected function getRequestData(): array
     {
         $headers = Headers::getInstance();
+        $session = Session::setCookieExpire(self::$expire['cookie'])::setExpire(self::$expire['session']);
         $default = [
             ...$_GET,
-            'session' => Session::setExpire(self::$expire['session'])::getInstance(),
-            'cookie' => Cookie::setExpire(self::$expire['cookie'])::getInstance(),
+            'session' => $session,
+            'cookie' => Cookie::setExpire(self::$expire['cookie']),
             'server' => Server::getInstance(),
             'env' => Env::getInstance(),
             'headers' => $headers,

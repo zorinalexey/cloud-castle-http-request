@@ -30,8 +30,12 @@ final class SessionTest extends TestCase
     public function testMagicSetAndGet(): void
     {
         $session = Session::getInstance();
-        $session->set('baz', 'qux');
-        $this->assertEquals('qux', $session->get('baz'));
+        $session->foo = 'bar';
+        $this->assertSame('bar', $session->foo);
+        $this->assertSame('bar', $session->get('foo'));
+        $session->bar = 123;
+        $this->assertSame(123, $session->bar);
+        $this->assertNull($session->not_exists);
     }
 
     public function testGetDefault(): void
