@@ -453,7 +453,7 @@ final class Session
      * Влияет на то, как долго браузер будет хранить идентификатор сессии.
      * 
      * @param int $time Время жизни cookie в секундах
-     * @return string|static Возвращает имя класса или экземпляр для цепочки методов
+     * @return string Возвращает имя класса
      * @since 1.0.0
      * 
      * @example
@@ -490,7 +490,7 @@ final class Session
      * }
      * ```
      */
-    public static function setCookieExpire(int $time): string|static
+    public static function setCookieExpire(int $time): string
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             ini_set('session.cookie_lifetime', $time);

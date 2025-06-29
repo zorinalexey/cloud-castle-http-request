@@ -8,6 +8,12 @@ use PHPUnit\Framework\TestCase;
 use CloudCastle\HttpRequest\Http\Session;
 use ReflectionClass;
 
+/**
+ * @property mixed $foo
+ * @property mixed $bar
+ * @property mixed $not_exists
+ */
+
 final class SessionTest extends TestCase
 {
     protected function setUp(): void
@@ -16,6 +22,7 @@ final class SessionTest extends TestCase
             session_unset();
             session_destroy();
         }
+        
         $_SESSION = [];
         Session::setExpire(10);
     }
@@ -30,12 +37,11 @@ final class SessionTest extends TestCase
     public function testMagicSetAndGet(): void
     {
         $session = Session::getInstance();
-        $session->foo = 'bar';
-        $this->assertSame('bar', $session->foo);
+        $session->set('foo', 'bar');
         $this->assertSame('bar', $session->get('foo'));
-        $session->bar = 123;
-        $this->assertSame(123, $session->bar);
-        $this->assertNull($session->not_exists);
+        $session->set('bar', 123);
+        $this->assertSame(123, $session->get('bar'));
+        $this->assertNull($session->get('not_exists'));
     }
 
     public function testGetDefault(): void
@@ -74,10 +80,12 @@ final class SessionTest extends TestCase
         $instProp = $ref->getProperty('instance');
         $instProp->setAccessible(true);
         $instProp->setValue([]);
+        
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_unset();
             session_destroy();
         }
+
         $_SESSION = [];
         $session2 = Session::getInstance();
         $this->assertNull($session2->get('foo'));
@@ -89,8 +97,8 @@ final class SessionTest extends TestCase
             session_unset();
             session_destroy();
         }
+
         $_SESSION = ['test' => 'value'];
-        
         $reflection = new ReflectionClass(Session::class);
         $constructor = $reflection->getConstructor();
         
@@ -127,8 +135,8 @@ final class SessionTest extends TestCase
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
+
         $_SESSION = ['test' => 'value'];
-        
         $reflection = new ReflectionClass(Session::class);
         $constructor = $reflection->getConstructor();
         
@@ -162,8 +170,8 @@ final class SessionTest extends TestCase
             session_unset();
             session_destroy();
         }
+
         $_SESSION = [];
-        
         $reflection = new ReflectionClass(Session::class);
         $constructor = $reflection->getConstructor();
         
@@ -205,8 +213,8 @@ final class SessionTest extends TestCase
             session_unset();
             session_destroy();
         }
+
         $_SESSION = [];
-        
         $session2 = Session::getInstance();
         $this->assertNull($session2->get('foo'));
     }
@@ -347,5 +355,19 @@ final class SessionTest extends TestCase
     {
         $instance = Session::createForTesting();
         $this->assertInstanceOf(Session::class, $instance);
+    }
+
+    public function testSetCookieExpire(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_unset();
+            session_destroy();
+        }
+
+        $old = ini_get('session.cookie_lifetime');
+        $result = \CloudCastle\HttpRequest\Http\Session::setCookieExpire(1234);
+        $this->assertSame(\CloudCastle\HttpRequest\Http\Session::class, $result);
+        $this->assertEquals(1234, (int)ini_get('session.cookie_lifetime'));
+        ini_set('session.cookie_lifetime', $old); // возвращаем обратно
     }
 } 

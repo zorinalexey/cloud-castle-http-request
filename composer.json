@@ -41,9 +41,12 @@
         "phpunit/phpunit": "^10.5"
     },
     "scripts": {
-        "documentation-generate": "php ./tools/phpDocumentor.phar run",
-        "unit-test": "phpunit --testdox",
-        "phpstan-analyse": "php ./tools/phpstan.phar analyse"
+        "docs-gen": "php ./tools/phpDocumentor.phar run",
+        "test": "phpunit --testdox",
+        "phpstan": "php ./tools/phpstan.phar analyse",
+        "coverage": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text",
+        "coverage-html": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html coverage-report",
+        "coverage-ci": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --fail-on-incomplete --fail-on-risky --fail-on-warning"
     },
     "config": {
         "sort-packages": true,

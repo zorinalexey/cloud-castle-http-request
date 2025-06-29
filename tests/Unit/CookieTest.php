@@ -5,15 +5,17 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use CloudCastle\HttpRequest\Http\Cookie;
 
+/**
+ * @property mixed $foo
+ */
+
 class CookieTest extends TestCase
 {
     protected function setUp(): void
     {
         parent::setUp();
         $_COOKIE = [];
-        if (method_exists(Cookie::class, 'resetInstance')) {
-            Cookie::resetInstance();
-        }
+        Cookie::resetInstance();
     }
 
     public function testSingletonInstance(): void
@@ -77,8 +79,8 @@ class CookieTest extends TestCase
     public function testMagicSetAndGet(): void
     {
         $cookie = Cookie::getInstance();
-        $cookie->foo = 'bar';
-        $this->assertSame('bar', $cookie->foo);
+        $cookie->set('foo', 'bar');
+        $this->assertSame('bar', $cookie->get('foo'));
     }
 
     public function testDeleteRemovesCookie(): void
@@ -141,7 +143,7 @@ class CookieTest extends TestCase
     {
         $cookie = Cookie::getInstance();
         $cookie->set('foo', 'bar');
-        $reflection = new \ReflectionClass($cookie);
+        $reflection = new ReflectionClass($cookie);
         $prop = $reflection->getProperty('data');
         $prop->setAccessible(true);
         $data = $prop->getValue($cookie);

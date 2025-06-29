@@ -59,7 +59,6 @@ class HeadersTest extends TestCase
     public function testConstructor(): void
     {
         $_SERVER['HTTP_X_CONSTRUCTOR_TEST'] = 'constructor_value';
-        
         $reflection = new ReflectionClass(Headers::class);
         $constructor = $reflection->getConstructor();
         
@@ -83,7 +82,6 @@ class HeadersTest extends TestCase
         $_SERVER['HTTP_USER_AGENT'] = 'TestAgent';
         
         $headers = Headers::getInstance();
-        
         $this->assertInstanceOf(Headers::class, $headers);
         
         // Очищаем $_SERVER
@@ -96,7 +94,6 @@ class HeadersTest extends TestCase
         $_SERVER['HTTP_X_JSON_DATA'] = '{"key": "value"}';
         
         $headers = Headers::getInstance();
-        
         $this->assertInstanceOf(Headers::class, $headers);
         
         // Очищаем $_SERVER
@@ -266,5 +263,16 @@ class HeadersTest extends TestCase
     {
         $instance = \CloudCastle\HttpRequest\Http\Headers::createForTesting();
         $this->assertInstanceOf(\CloudCastle\HttpRequest\Http\Headers::class, $instance);
+    }
+
+    public function testCreateForTestingCreatesIndependentInstances(): void
+    {
+        $headers1 = \CloudCastle\HttpRequest\Http\Headers::createForTesting();
+        $headers2 = \CloudCastle\HttpRequest\Http\Headers::createForTesting();
+        $headers1->X_Test_Header = 'value1';
+        $headers2->X_Test_Header = 'value2';
+        $this->assertNotSame($headers1, $headers2);
+        $this->assertEquals('value1', $headers1->get('X_Test_Header'));
+        $this->assertEquals('value2', $headers2->get('X_Test_Header'));
     }
 } 

@@ -1,6 +1,80 @@
 # CloudCastle HttpRequest
 
+[![Coverage Status](https://img.shields.io/badge/coverage-auto-brightgreen)](coverage-report/index.html)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/zorinalexey/cloud-castle-http-request/actions)
+[![PHPStan](https://img.shields.io/badge/phpstan-passing-brightgreen)](https://phpstan.org/)
+[![License](https://img.shields.io/github/license/zorinalexey/cloud-castle-http-request)](LICENSE)
+[![Packagist Version](https://img.shields.io/packagist/v/cloud-castle/http-request)](https://packagist.org/packages/cloud-castle/http-request)
+---
+
 **CloudCastle HttpRequest** — современная PHP-библиотека для удобной, безопасной и расширяемой работы с HTTP-запросами, сессиями, cookie, файлами, заголовками, серверными переменными и окружением. Поддерживает автоматический разбор JSON и XML, паттерн Singleton, магические методы, глобальные вспомогательные функции и полностью покрыта тестами.
+
+---
+
+## 📎 Быстрые ссылки
+- [Документация](#подробное-api)
+- [Примеры](#примеры-использования)
+- [Архитектура](#архитектура-и-компоненты)
+- [FAQ](#faq-и-troubleshooting)
+- [Changelog](CHANGELOG.md)
+- [Issues](https://github.com/zorinalexey/Http-Request/issues)
+- [Pull Requests](https://github.com/zorinalexey/Http-Request/pulls)
+
+---
+
+## ⚙️ Требования
+- PHP >= 8.1
+- Расширения: ext-json, ext-mbstring
+- Совместимость: любой фреймворк, поддержка PSR-4
+
+---
+
+## 🚀 CI/CD Workflow (GitHub Actions)
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, json
+      - name: Install dependencies
+        run: composer install --no-interaction
+      - name: Run tests
+        run: composer test
+      - name: Run static analysis
+        run: composer phpstan
+      - name: Coverage (text)
+        run: composer coverage
+      - name: Coverage (HTML)
+        run: composer coverage-html
+```
+
+---
+
+## 🗺️ Архитектура (Mermaid)
+```mermaid
+graph TD;
+  Request -->|has| Cookie
+  Request -->|has| Session
+  Request -->|has| Headers
+  Request -->|has| Get
+  Request -->|has| Post
+  Request -->|has| Files
+  Request -->|has| Server
+  Request -->|has| Env
+  Cookie -->|uses| GetInstanceTrait
+  Session -->|uses| SetExpireTrait
+  Headers -->|uses| GetDataTrait
+  Headers -->|uses| GetInstanceTrait
+  Env -->|uses| GetDataTrait
+  Env -->|uses| GetInstanceTrait
+```
 
 ---
 
@@ -228,32 +302,28 @@ if ($file && $file->isUploaded()) {
 
 ---
 
-## 🔌 Интеграция с фреймворками
-
-Библиотека не зависит от конкретного фреймворка и может быть использована в любом проекте на PHP (Laravel, Symfony, Yii, Slim, Zend и др.).
-
-**Пример для Laravel:**
+## 🌐 Интеграция с фреймворками
+### Laravel
 ```php
-// В контроллере
 use CloudCastle\HttpRequest\Request;
-
-public function index()
-{
-    $request = Request::getInstance();
-    $userId = $request->get('user_id');
-    // ...
-}
+$request = Request::getInstance();
+$userId = $request->get('user_id');
 ```
 
-**Пример для Slim:**
+### Symfony
 ```php
-// В middleware
 use CloudCastle\HttpRequest\Request;
+$request = Request::getInstance();
+$headers = $request->headers;
+```
 
-$app->add(function ($request, $handler) {
-    $ccRequest = Request::getInstance();
+### Slim
+```php
+use CloudCastle\HttpRequest\Request;
+$app->post('/api', function ($req, $res, $args) {
+    $request = Request::getInstance();
+    $data = $request->all();
     // ...
-    return $handler->handle($request);
 });
 ```
 
@@ -268,25 +338,53 @@ vendor/bin/phpunit --testdox
 
 ---
 
-## ❓ FAQ
+## ❓ FAQ и Troubleshooting
+- **Q:** Почему не видны новые переменные окружения?  
+  **A:** Используйте `$env->get('VAR')` после установки, убедитесь, что переменная есть в $_ENV.
+- **Q:** Как добавить поддержку нового Content-Type?  
+  **A:** Добавьте его в массив `Request::$contentTypes`.
+- **Q:** Как протестировать загрузку файлов?  
+  **A:** Используйте мок-объекты и подмену $_FILES в тестах.
+- **Q:** Как сбросить singleton?  
+  **A:** Используйте метод `resetInstance()` для нужного класса.
 
-**Q: Как получить все параметры запроса?**
-A: `$all = request()->all();`
+---
 
-**Q: Как получить заголовок?**
-A: `$userAgent = request()->headers->get('User-Agent');`
+## 🚦 Performance & Security
+- Используйте HTTPS для работы с cookie и сессиями.
+- Не храните чувствительные данные в cookie.
+- Для production отключайте подробные ошибки.
+- Используйте статический анализ и покрытие тестами для повышения качества.
 
-**Q: Как загрузить файл?**
-A: `request()->files('avatar')->save('/uploads/');`
+---
 
-**Q: Как работать с cookie?**
-A: `request()->cookie->set('token', 'abc');`
+## 🤝 Contributing
+- Форкните репозиторий, создайте ветку, отправьте PR.
+- Соблюдайте PSR-12, пишите тесты для новых фич.
+- Все изменения должны проходить CI/CD.
+- Для багов — создавайте issue с подробным описанием.
 
-**Q: Как сбросить singleton для тестов?**
-A: `Request::resetInstance();`
+---
 
-**Q: Как добавить свой компонент?**
-A: Создайте класс и добавьте его в Request через расширение.
+## 📝 Changelog
+Смотрите [CHANGELOG.md](CHANGELOG.md) для истории изменений.
+
+---
+
+## 📬 Контакты и поддержка
+- Email: [zorinalexey59292@gmail.com](mailto:zorinalexey59292@gmail.com)
+- Telegram: [@CloudCastle85](https://t.me/CloudCastle85)
+- Issues: https://github.com/zorinalexey/Http-Request/issues
+
+---
+
+## 📄 Лицензия
+MIT License. См. файл [LICENSE](LICENSE).
+
+---
+
+## 🌍 English version
+See [README.en.md](README.en.md) for English documentation (coming soon).
 
 ---
 
