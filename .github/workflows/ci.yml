@@ -43,3 +43,9 @@ jobs:
         with:
           name: coverage-report
           path: coverage-report/ 
+
+      - name: Upload docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: api docs
+          path: biuld/api
