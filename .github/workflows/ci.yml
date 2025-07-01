@@ -24,13 +24,19 @@ jobs:
           coverage: xdebug
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer install --no-interaction
+        
+      - name: Run tests
+        run: composer test
 
-      - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --memory-limit=1G
+      - name: Run static analysis
+        run: composer phpstan
 
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit --coverage-clover=coverage-report/clover.xml
+      - name: Coverage (text)
+        run: composer coverage
+
+      - name: Coverage (HTML)
+        run: composer coverage-html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
