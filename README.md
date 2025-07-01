@@ -1,7 +1,5 @@
 # CloudCastle HttpRequest
 
-[English](README.en.md) | [Deutsch](README.de.md)
-
 [![Coverage Status](https://img.shields.io/badge/coverage-auto-brightgreen)](coverage-report/index.html)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/zorinalexey/cloud-castle-http-request/actions)
 [![PHPStan](https://img.shields.io/badge/phpstan-passing-brightgreen)](https://phpstan.org/)
@@ -9,7 +7,55 @@
 [![Packagist Version](https://img.shields.io/packagist/v/cloud-castle/http-request)](https://packagist.org/packages/cloud-castle/http-request)
 ---
 
+[English](README.en.md) | [Deutsch](README.de.md) | [Français](README.fr.md)
+---
+
 **CloudCastle HttpRequest** — современная PHP-библиотека для удобной, безопасной и расширяемой работы с HTTP-запросами, сессиями, cookie, файлами, заголовками, серверными переменными и окружением. Поддерживает автоматический разбор JSON и XML, паттерн Singleton, магические методы, глобальные вспомогательные функции и полностью покрыта тестами.
+
+---
+
+## 🧪 Статистика тестов и покрытия
+
+- **PHPUnit**: 163 теста, 194 утверждения, 2 пропущено
+- **Покрытие строк**: 90.43% (624 / 690)
+- **Покрытие методов**: 73.33% (44 / 60)
+- **Покрытие классов**: 61.54% (8 / 13)
+- **Последний запуск**: 2025-06-29
+- **Среднее время выполнения тестов**: ~0.5 сек
+
+<details>
+<summary>Покрытие по директориям</summary>
+
+| Директория   | Строки | Методы | Классы |
+|--------------|--------|--------|--------|
+| Http         | 82.79% (101/122) | 83.87% (26/31) | 57.14% (4/7) |
+| Server       | 70.83% (17/24)   | 75.00% (3/4)   | 50.00% (1/2) |
+| Traits       | 100.00% (17/17)  | 100.00% (6/6)  | 100.00% (3/3) |
+| helpers      | 0.00% (0/34)     | 0.00% (0/8)    | — |
+
+## 🧪 Подробная статистика покрытия по классам
+
+| Класс                      | Строки         | Методы         | Публичные методы | Покрытие методов |
+|----------------------------|----------------|----------------|------------------|------------------|
+| **Cookie**                 | 100% (20/20)   | 100% (7/7)     | 7/7              | 100%             |
+| **Get**                    | 100% (4/4)     | 100% (1/1)     | 1/1              | 100%             |
+| **Post**                   | 100% (4/4)     | 100% (1/1)     | 1/1              | 100%             |
+| **Files**                  | 100% (15/15)   | 100% (1/1)     | 1/1              | 100%             |
+| **Headers**                | 91% (21/23)    | 67% (2/3)      | 2/3              | 67%              |
+| **Session**                | 78% (25/32)    | 67% (6/9)      | 6/9              | 67%              |
+| **UploadFile**             | 50% (12/24)    | 89% (8/9)      | 8/9              | 89%              |
+| **Server**                 | 100% (4/4)     | 100% (1/1)     | 1/1              | 100%             |
+| **Env**                    | 65% (13/20)    | 67% (2/3)      | 2/3              | 67%              |
+
+**Непокрытые публичные методы (по dashboard.html):**
+- UploadFile::save — 14% покрытия
+- Session::__set, __get — 0% покрытия
+- Headers::__construct — 87% покрытия (частично)
+- Env::__set — 53% покрытия
+- (и др., см. dashboard.html)
+
+
+</details>
 
 ---
 
@@ -25,7 +71,7 @@
 ---
 
 ## ⚙️ Требования
-- PHP >= 8.1
+- PHP >= 8.3
 - Расширения: ext-json, ext-mbstring
 - Совместимость: любой фреймворк, поддержка PSR-4
 
@@ -34,27 +80,59 @@
 ## 🚀 CI/CD Workflow (GitHub Actions)
 ```yaml
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: [ '8.3', '8.4' ]
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup PHP
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
-          extensions: mbstring, json
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, xml, simplexml, curl, json, session
+          coverage: xdebug
+
       - name: Install dependencies
         run: composer install --no-interaction
+
       - name: Run tests
         run: composer test
+
       - name: Run static analysis
         run: composer phpstan
+
       - name: Coverage (text)
         run: composer coverage
+
       - name: Coverage (HTML)
         run: composer coverage-html
+
+      - name: Generate documentation
+        run: composer docs-gen
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report/
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: build/api/ 
 ```
 
 ---
@@ -382,11 +460,6 @@ vendor/bin/phpunit --testdox
 
 ## 📄 Лицензия
 MIT License. См. файл [LICENSE](LICENSE).
-
----
-
-## 🌍 English version
-See [README.en.md](README.en.md) for English documentation (coming soon).
 
 ---
 
